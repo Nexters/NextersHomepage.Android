@@ -19,11 +19,11 @@ public class Nexters extends AppCompatActivity {
 
         mWebView=(WebView)findViewById(R.id.webView);
         mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.loadUrl("http://nh.maden.kr/kim.html");
+        mWebView.loadUrl("http://nh.maden.kr/admin");
         mWebView.setWebViewClient(new WebViewClientClass());
 
 
-        
+
 
     }
 
