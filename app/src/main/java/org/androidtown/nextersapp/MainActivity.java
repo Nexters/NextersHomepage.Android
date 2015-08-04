@@ -1,7 +1,10 @@
 package org.androidtown.nextersapp;
 
+
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,17 +12,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
+
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.PersistentCookieStore;
-import com.loopj.android.http.RequestParams;
-
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -37,24 +33,21 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
 
 
     private CookieManager cookieManager;
-    private String domain="http://nh.maden.kr/";
+    private String domain="http://nh.maden.kr";
     private HttpClient client = new DefaultHttpClient();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,31 +55,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        cookieManager = CookieManager.getInstance();
 
 
 
-        /*if(cookie.length()>1){
+
+
+        cookieManager = CookieManager.getInstance(); // 쿠키매니저 초기화
+
+        String cookie=cookieManager.getCookie(domain);
+
+        if(cookie!=null){
             Intent intent=new Intent(getApplicationContext(),Nexters.class);
             startActivity(intent);
-        }*/
-
-
-    }
-
-
-
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (cookieManager != null) {
-
-
-            cookieManager.removeAllCookie();
-
-
         }
+
+
+
+
+
+
     }
+
+
+
+
 
     public void onClickTest(View v) throws IOException {
 
@@ -118,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 실제 전송하는 부분
+
         public String executeClient() {
             EditText editText = (EditText)findViewById(R.id.editText);
             EditText editText2 = (EditText)findViewById(R.id.editText2);
@@ -137,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
             HttpConnectionParams.setSoTimeout(params, 5000);
 
             // Post객체 생성
-            HttpPost httpPost = new HttpPost(domain+"login");
+            HttpPost httpPost = new HttpPost(domain+"/login");
 
             try {
                 UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
@@ -164,11 +157,11 @@ public class MainActivity extends AppCompatActivity {
 
                     json = new JSONObject(sb.toString());
                     if(json.get("result").toString().equals("success")){
-                        Log.d("abcdeee","1");
+
                         JSONArray resData= (JSONArray) json.get("resData");
-                        Log.d("abcdeee","2");
+
                         JSONObject resData1= (JSONObject) resData.get(0);
-                        Log.d("abcdeee","3");
+
                         if(Integer.parseInt( resData1.get("userRoles").toString())<2){
 
 
@@ -177,10 +170,15 @@ public class MainActivity extends AppCompatActivity {
                             if (!cookies.isEmpty()) {
                                 for (int i = 0; i < cookies.size(); i++) {
                                     // cookie = cookies.get(i);
-                                    cookieString = cookies.get(i).getName() + "="
-                                            + cookies.get(i).getValue();
-                                    Log.e("surosuro", cookieString);
+                                    cookieString = cookies.get(i).getName() + "=\""
+                                            + cookies.get(i).getValue()+"\"";
+
+
                                     cookieManager.setCookie(domain, cookieString);
+
+
+
+
 
                                 }
                             }
@@ -188,10 +186,6 @@ public class MainActivity extends AppCompatActivity {
                                 Thread.sleep(500);
 
 
-                                URL url=new URL(domain);
-                                HttpURLConnection conn=(HttpURLConnection)url.openConnection();
-                                conn.setRequestProperty("Cookie",cookieString);
-                                Log.d("wpqkf", conn.getHeaderFields().toString());
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -202,11 +196,19 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                     else{
-                        Log.d("abcdeee", json.get("result").toString());
+                        Looper.prepare();
+                        Toast.makeText(MainActivity.this,"아이디와 비밀번호가 틀렸습니다",Toast.LENGTH_LONG).show();
+                        Looper.loop();
+
+
+
+
+
+
 
                     }
                 } catch (JSONException e) {
-                    Log.d("errorrr",e.getMessage());
+                    Log.d("errorrr", e.getMessage());
                 }
 
 
@@ -221,6 +223,9 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
+
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

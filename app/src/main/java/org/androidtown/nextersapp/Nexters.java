@@ -1,41 +1,23 @@
 package org.androidtown.nextersapp;
 
 import android.content.Intent;
-import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.loopj.android.http.PersistentCookieStore;
-
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.net.HttpCookie;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.HttpsURLConnection;
 
 
 public class Nexters extends AppCompatActivity {
 
     private WebView mWebView;
+    private final long	FINSH_INTERVAL_TIME = 2000;
+    private long backPressedTime = 0;
 
 
     @Override
@@ -48,16 +30,41 @@ public class Nexters extends AppCompatActivity {
 
 
         mWebView=(WebView)findViewById(R.id.webView);
+        mWebView.getSettings().setPluginState(WebSettings.PluginState.ON);
+
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.loadUrl("http://nh.maden.kr/admin/Main.html");
+
+
+
+
+
         mWebView.setWebViewClient(new WebViewClientClass());
 
 
 
 
 
-
     }
+    @Override
+    public void onBackPressed() {
+        long tempTime        = System.currentTimeMillis();
+        long intervalTime    = tempTime - backPressedTime;
+
+        if ( 0 <= intervalTime && FINSH_INTERVAL_TIME >= intervalTime ) {
+            moveTaskToBack(true);
+
+            finish();
+
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
+        else {
+            backPressedTime = tempTime;
+            Toast.makeText(getApplicationContext(),"'뒤로'버튼을한번더누르시면종료됩니다.",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
 
 
 
@@ -68,11 +75,23 @@ public class Nexters extends AppCompatActivity {
     private class WebViewClientClass extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view,String url){
-            view.loadUrl(url);
+
+            if(url.equals("http://nh.maden.kr/admin/index.html") || url.equals("http://nh.maden.kr/admin/")){
+                CookieManager.getInstance().removeAllCookie();
+                Intent intent=new Intent(getApplicationContext(),MainActivity.class);
+                startActivity(intent);
+            }
+            else{
+                view.loadUrl(url);
+            }
+
+
 
 
             return true;
         }
+
+
     }
 
    /* @Override
